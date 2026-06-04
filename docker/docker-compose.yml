@@ -1,0 +1,68 @@
+version: "3.9"
+
+services:
+
+  db:
+    image: postgres:15
+    container_name: coffee-db
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: coffee-db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - coffee-network
+
+  api:
+    container_name: coffee-backend
+    build: 
+      context: ../api-coffee
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/coffee-db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+    networks:
+      - coffee-network
+
+  frontend:
+    container_name: coffee-frontend
+    build:
+      context: ../frontend-react
+      args:
+        VITE_API_URL: http://api:8080
+    ports:
+      - "5173:80"
+    networks:
+      - coffee-network
+
+  cypress:
+    container_name: coffee-cypress
+    build:
+      context: ../tests-e2e
+      dockerfile: Dockerfile
+    working_dir: /e2e
+    depends_on:
+      - api
+      - frontend
+    environment:
+      - frontendUrl=http://frontend:80
+      - apiUrl=http://api:8080
+    command: [npx cypress run"]
+    networks:
+      - coffee-network
+
+volumes:
+  db-data:
+
+networks:
+  coffee-network:
+    driver: bridge
