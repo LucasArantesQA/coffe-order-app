@@ -6,3 +6,4 @@ tests-e2e/cypress.env.json
 node_modules/
 /tests-e2e/node_modules
 /.kiro
+/tests-e2e/schematesis/results

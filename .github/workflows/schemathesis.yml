@@ -1,0 +1,98 @@
+name: Schemathesis API Fuzzing
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  schemathesis:
+    name: Fuzz API with Schemathesis
+    runs-on: ubuntu-latest
+
+    # Sobe o PostgreSQL como service nativo do runner — sem Compose
+    services:
+      db:
+        image: postgres:15
+        env:
+          POSTGRES_DB: coffee-db
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # Builda e sobe a API diretamente no runner (sem Docker),
+      # apontando para o PostgreSQL service acima
+      - name: Build API
+        run: ./mvnw clean package -DskipTests
+        working-directory: api-coffee
+
+      - name: Start API
+        run: |
+          java -jar api-coffee/target/*.jar \
+            --spring.datasource.url=jdbc:postgresql://localhost:5432/coffee-db \
+            --spring.datasource.username=postgres \
+            --spring.datasource.password=postgres &
+          echo $! > api.pid
+
+      # Aguarda o endpoint OpenAPI estar acessivel (ate 120s)
+      - name: Wait for OpenAPI spec
+        run: |
+          for i in $(seq 1 24); do
+            if curl -sf http://localhost:8080/v3/api-docs > /dev/null; then
+              echo "API disponivel!"
+              exit 0
+            fi
+            echo "Tentativa $i/24 — aguardando 5s..."
+            sleep 5
+          done
+          echo "ERRO: API nao subiu a tempo."
+          exit 1
+
+      - name: Run Schemathesis
+        uses: schemathesis/action@v1
+        with:
+          schema: http://localhost:8080/v3/api-docs
+          checks: all
+          phases: fuzzing,stateful
+          report: junit
+          args: >-
+            --report-junit-path schemathesis-report/junit-report.xml
+            --coverage-format html
+            --coverage-report-html-path schemathesis-report/coverage.html
+
+      # Publica os resultados na aba Tests do PR — bloqueia merge se houver falhas
+      - name: Publish test results
+        uses: mikepenz/action-junit-report@v4
+        if: always()
+        with:
+          report_paths: schemathesis-report/junit-report.xml
+          check_name: Schemathesis Results
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: schemathesis-coverage
+          path: schemathesis-report/coverage.html
+          retention-days: 14
+
+      - name: Stop API
+        if: always()
+        run: kill $(cat api.pid) || true
