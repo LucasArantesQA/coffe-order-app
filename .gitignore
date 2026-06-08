@@ -5,3 +5,4 @@ tests-e2e/cypress.env.json
 /tests-e2e/cypress/videos
 node_modules/
 /tests-e2e/node_modules
+/.kiro
