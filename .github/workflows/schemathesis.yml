@@ -78,6 +78,7 @@ jobs:
       - name: Run Schemathesis
         run: |
           mkdir -p schemathesis-report
+          chmod 777 schemathesis-report
           docker run --rm --network host \
             -v "$PWD/schemathesis-report:/app/results" \
             schemathesis/schemathesis run "http://localhost:8080/v3/api-docs" \
