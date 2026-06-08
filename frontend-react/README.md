@@ -18,20 +18,35 @@ src/
  ┗ utils/        ← Funções utilitárias
 ```
 
-## ▶️ Como rodar o Front-End individualmente
+## ▶️ Como rodar o Front-End individualmente (sem Docker)
 
-Exemplo de configuração para ambiente local:
-- Altere o Arquivo .env no frontend:
+Altere o arquivo `.env` na pasta `frontend-react/`:
 
 ```bash
 VITE_API_URL=http://localhost:8080
 ```
 
-- Rode a aplicação em modo dev:
+Depois rode:
+
 ```bash
-cd frontend-react
 npm install
 npm run dev
 ```
 
 Aplicação disponível em: `http://localhost:5173`
+
+---
+
+## 🐳 Subir só o front-end via Docker
+
+Execute a partir da pasta `docker/`. O banco e a API precisam estar rodando antes:
+
+```bash
+# Se banco e API ainda não estão no ar
+docker compose up -d db api
+
+# Sobe o front-end
+docker compose up -d frontend
+```
+
+> O front-end só sobe após a API passar no healthcheck.

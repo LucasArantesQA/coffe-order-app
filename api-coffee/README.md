@@ -48,11 +48,41 @@ cd api-coffee
 - A collection Postman está na raiz da API:  
 `/api-coffee/postman_collection.json`
 
-## ▶️ Como rodar a API localmente
+## ▶️ Como rodar a API localmente (sem Docker)
 
 ```bash
-cd api-coffee
+# Necessário ter PostgreSQL rodando em localhost:5432
+# e o application.properties apontando para localhost
+
 ./mvnw spring-boot:run
 ```
 
 API disponível em: `http://localhost:8080`
+
+---
+
+## 🐳 Subir só a API via Docker
+
+Execute a partir da pasta `docker/`:
+
+```bash
+# Sobe o banco e a API (sem front-end e sem cypress)
+docker compose up -d db api
+```
+
+A API ficará disponível em `http://localhost:8080` e o Swagger em `http://localhost:8080/swagger-ui/index.html`.
+
+---
+
+## 🔄 Resetar o banco de dados
+
+Para apagar todos os dados (inclusive os inseridos pelo Schemathesis) e recriar do zero:
+
+```bash
+# Execute na pasta docker/
+docker compose down -v && docker compose up -d db api
+```
+
+> O seeder roda automaticamente ao subir a API com o banco vazio e popula os ingredientes e sabores clássicos iniciais.
+>
+> Se o banco tiver dados corrompidos (campos `null`), o seeder os remove automaticamente no startup — sem precisar derrubar o banco.

@@ -16,22 +16,35 @@ services:
       - db-data:/var/lib/postgresql/data
     networks:
       - coffee-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   api:
     container_name: coffee-backend
-    build: 
+    build:
       context: ../api-coffee
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/coffee-db
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
     networks:
       - coffee-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/v3/api-docs || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
 
   frontend:
     container_name: coffee-frontend
@@ -41,18 +54,25 @@ services:
         VITE_API_URL: /api
     ports:
       - "5173:80"
+    depends_on:
+      api:
+        condition: service_healthy
     networks:
       - coffee-network
 
   cypress:
     container_name: coffee-cypress
+    profiles:
+      - e2e
     build:
       context: ../tests-e2e
       dockerfile: Dockerfile
     working_dir: /e2e
     depends_on:
-      - api
-      - frontend
+      api:
+        condition: service_healthy
+      frontend:
+        condition: service_started
     environment:
       - frontendUrl=http://frontend:80
       - apiUrl=http://api:8080

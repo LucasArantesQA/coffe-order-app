@@ -34,12 +34,40 @@ Para rodar os testes, você precisa ter instalado:
     - E permanecer na mesma pasta (tests-e2e/).
 
 
-## ✅ Como executar no terminal:
-
+## ✅ Como executar no terminal
 
 | Comando              | O que faz                                    |
 |----------------------|-----------------------------------------------|
 | `npm run open`       | Abre Cypress no modo gráfico (interativo)    |
 | `npm run test:all`   | 🔥 Executa **todos** os testes (E2E + API)   |
 | `npm run test:e2e`   | 🚀 Executa só os testes E2E (`.feature`)     |
-| `npm run test:api`   | 🧠 Executa só os testes de API     |
+| `npm run test:api`   | 🧠 Executa só os testes de API               |
+
+---
+
+## 🐳 Rodar o Cypress via Docker
+
+O Cypress usa um profile separado no Docker Compose para não subir por acidente junto com os outros serviços.
+
+Execute a partir da pasta `docker/`. O banco, a API e o front-end precisam estar rodando:
+
+```bash
+# Sobe tudo que o cypress depende
+docker compose up -d db api frontend
+
+# Roda o cypress em modo headless
+docker compose --profile e2e up cypress
+```
+
+---
+
+## 🔄 Resetar o banco antes de rodar os testes
+
+Se o banco estiver com dados sujos de execuções anteriores:
+
+```bash
+# Execute na pasta docker/
+docker compose down -v && docker compose up -d db api frontend
+```
+
+Depois rode o Cypress normalmente.

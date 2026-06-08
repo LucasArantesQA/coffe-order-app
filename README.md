@@ -57,26 +57,63 @@ git clone https://github.com/SENAI-SD/qa-junior-01452-2025-147.934.946-17.git
 cd qa-junior-01452-2025-147.934.946-17
 ```
 
-##  2 Exceute o docker componse
+## 2 Execute o Docker Compose
 
 ```bash
 cd docker
-docker-compose up --build
+docker compose up -d --build
 ```
 
 ✔️ Esse comando executa:
 
-- PostgreSQL → localhost:5432
-- API → http://localhost:8080/swagger-ui/index.html
-- Front-End → http://localhost:5173
-- Cypress com testes API e E2E (Execução em modo Headless)
+- PostgreSQL → `localhost:5432`
+- API → `http://localhost:8080/swagger-ui/index.html`
+- Front-End → `http://localhost:5173`
 
-### 🔧 Executar módulos individualmente
+> O Cypress **não sobe automaticamente** neste comando. Para rodá-lo, veja a seção abaixo.
+
+---
+
+## 🐳 Subir serviços individualmente
+
+Todos os comandos devem ser executados a partir da pasta `docker/`.
+
+### Só o banco + API (sem front-end)
+```bash
+docker compose up -d db api
+```
+
+### Adicionar o front-end depois
+```bash
+docker compose up -d frontend
+```
+
+### Rodar o Cypress (E2E)
+O Cypress usa um profile separado para não subir por acidente.
+```bash
+docker compose --profile e2e up cypress
+```
+
+---
+
+## 🔄 Resetar o banco de dados
+
+Use este comando para apagar todos os dados e recriar o banco do zero com o seeder:
+
+```bash
+docker compose down -v && docker compose up -d db api
+```
+
+> O `-v` remove o volume do PostgreSQL. Na próxima subida o banco é recriado limpo e o seeder popula os dados iniciais automaticamente.
+
+---
+
+### 🔧 Executar módulos individualmente (sem Docker)
 
 - Consulte os respectivos READMEs:
   - 🔗 [API — api-coffee](./api-coffee/README.md)
   - 🔗 [Front-End — frontend-react](./frontend-react/README.md)
-  - 🔗 [Testes E2E/API — testes-e2e](./tests-e2e/README.md)
+  - 🔗 [Testes E2E/API — tests-e2e](./tests-e2e/README.md)
 
 
 ## 🚨 Observações e Melhorias 
