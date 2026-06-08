@@ -40,7 +40,9 @@ jobs:
       # Builda e sobe a API diretamente no runner (sem Docker),
       # apontando para o PostgreSQL service acima
       - name: Build API
-        run: ./mvnw clean package -DskipTests
+        run: |
+          chmod +x mvnw
+          ./mvnw clean package -DskipTests
         working-directory: api-coffee
 
       - name: Start API
