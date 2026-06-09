@@ -36,7 +36,8 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/coffee-db
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_PROFILES_ACTIVE: e2e
     networks:
       - coffee-network
     healthcheck:
